@@ -2,8 +2,7 @@
 import matplotlib.pyplot as plot
 import numpy
 import scipy.stats as st
-
-
+from prettytable import PrettyTable
 
 def func(data):
     dataX, dataY = [],[]
@@ -27,14 +26,25 @@ def func(data):
         temp += (dataY[counter]-CalcY[counter])**2
     CalcF /= temp #F расчетное из критерия Фишера
 
-############ table
-#значение оценки параметра - CalcY
-#numpy.std(CalcY[i]) #среднее отклонение
-#st.t.interval(0.95, len(CalcY)-1, loc=numpy.mean(CalcY), scale=st.sem(CalcY)) #доверительный интервал
-#hiQuadr+=math.pow((dataY[c]-CalcY[c]), 2)/gettedValues[c] # p-value
-
-    
-
+    ############ table
+    table = PrettyTable(['Значение оценки параметра', 'Среднее отклонение', 'Доверительный интервал','P-значение','Значимость'])
+    SStot = 0 #общая сумма квадратов https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D1%8D%D1%84%D1%84%D0%B8%D1%86%D0%B8%D0%B5%D0%BD%D1%82_%D0%B4%D0%B5%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D1%86%D0%B8%D0%B8
+    yp = (1/len(dataY))*sum(dataY)
+    for c in range(len(dataY)): SStot += (dataY[c]-yp)**2
+    Yi = []
+    for item in range(0,len(dataY)):
+        Yi.append((dataY[item]-CalcY[item])**2)
+    print('R2 = ', 1-sum(Yi)/SStot)
+    kDet = 1-sum(Yi)/SStot
+    Fstat = (kDet/(len(dataX)-1) / ((1-kDet)/(len(dataX)-len(dataX))))  #https://ru.wikipedia.org/wiki/F-%D1%82%D0%B5%D1%81%D1%82
+    hiQuadr = 0
+    for counter in range(0,len(CalcY)):
+        hiQuadr += ((dataY[counter]-CalcY[counter])**2)/CalcY[counter] # p-value
+    interval = st.t.interval(0.95, len(CalcY)-1, loc=numpy.mean(CalcY), scale=st.sem(CalcY))
+    table.add_row([a,numpy.std(CalcY),interval,hiQuadr,Fstat])
+    table.add_row([b,numpy.std(CalcY),interval,hiQuadr,Fstat])
+    print(table)
+    print('end')
     #res = numpy.linalg.lstsq(data_x, data_y, rcond=None)
     #print(res)
 #    gettedValues = []
@@ -47,7 +57,6 @@ def func(data):
 
 
 import pandas as pd
-import numpy as np
 import statsmodels.api as sm
 
 data = pd.read_csv('abalone.csv', sep=',', encoding='utf-8')
@@ -57,6 +66,7 @@ data['Sex'] = data['Sex'].replace('I', 2)
 
 X = data[['Length']]
 y = data['Diameter']
+X = sm.add_constant(X)
 est = sm.OLS(y, X).fit()
 print(est.summary())
 
