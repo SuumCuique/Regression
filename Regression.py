@@ -7,8 +7,15 @@ import scipy.stats as st
 import pandas as pd
 import numpy
 import math
+import os
+
+def cls():
+    os.system(['clear','cls'][os.name == 'nt'])
 
 def func(data):
+    #шапиро-уилка
+    stat = shapiro(data)
+    cls()
     Yi = []
     temp = 0
     CalcF = 0
@@ -64,8 +71,8 @@ def func(data):
         xOstatki.append(len(c)*i)
         i+=1
 
-    #шапиро-уилка
-    stat = shapiro(data)
+    
+
     print("Значение критерия Шапиро-Уилки", stat)
     
     fig = plot.figure() 
